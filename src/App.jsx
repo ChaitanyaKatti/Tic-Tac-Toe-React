@@ -101,16 +101,16 @@ function App() {
                     inventory={opInventory}
                 />
 
-                <div className="flex flex-col items-center w-full max-w-[60vh] lg:max-w-md my-1 md:my-2 flex-grow justify-center min-h-0">
-                    <div className="text-center mb-1 md:mb-2 min-h-[50px] md:min-h-[60px] flex flex-col justify-end shrink-0">
+                <div className="flex flex-col items-center w-full max-w-[40vh] md:max-w-[50vh] lg:max-w-md my-1 md:my-2 flex-grow justify-center min-h-0">
+                    <div className="text-center mb-2 flex flex-col justify-end shrink-0 gap-1">
                         <div className="text-xl md:text-2xl font-bold bg-white/90 text-black px-3 py-1 rounded shadow-lg inline-block">
                             {mainMessage}
                         </div>
-                        <div className="text-gray-400 mt-1 font-semibold text-xs md:text-sm h-4 md:h-5">{subMessage}</div>
+                        <div className="text-gray-400 font-semibold text-xs md:text-sm">{subMessage}</div>
                     </div>
 
                     <div className="w-full shrink-0 flex justify-center items-center">
-                        <Board
+                        <Board 
                             board={gameState.board || Array(9).fill(false)}
                             winningCombo={gameState.winningCombo}
                             onCellClick={handleCellClick}
