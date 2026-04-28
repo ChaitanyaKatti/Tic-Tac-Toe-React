@@ -8,9 +8,10 @@ export default defineConfig({
     minify: 'terser', 
     terserOptions: {
       compress: {
-        drop_console: true,
+        drop_console: true, // Remove console.log in production
       },
     },
+    // Customize CSS minification separately if needed
     cssMinify: 'lightningcss' 
   },
   plugins: [
