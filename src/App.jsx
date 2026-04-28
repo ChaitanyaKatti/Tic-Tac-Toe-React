@@ -3,7 +3,7 @@ import { useGameSync } from './hooks/useGameSync';
 import { Lobby } from './components/Lobby';
 import { Board } from './components/Board';
 import { PlayerStrip } from './components/PlayerStrip';
-import { playSound, clickSound, moveSound, captureSound, gameStartSound, gameEndSound, illegalSound } from './lib/sounds';
+import { playSound, clickSound, moveSound, captureSound, gameStartSound, gameEndSound, illegalSound, selectSound } from './lib/sounds';
 
 function App() {
     const {
@@ -33,6 +33,7 @@ function App() {
     }, [status]);
 
     const handleSelectDoll = (size) => {
+        playSound(selectSound);
         if (selectedDollSize === size) {
             setSelectedDollSize(null);
         } else {
