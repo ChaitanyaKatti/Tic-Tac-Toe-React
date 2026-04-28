@@ -30,12 +30,12 @@ function App() {
     };
 
     const handleCellClick = (index) => {
-        if (!selectedDollSize) return; 
-        if (status !== 'active') return; 
-        if (gameState.turnColor !== myColor) return; 
+        if (!selectedDollSize) return;
+        if (status !== 'active') return;
+        if (gameState.turnColor !== myColor) return;
 
         makeMove(index, selectedDollSize);
-        setSelectedDollSize(null); 
+        setSelectedDollSize(null);
     };
 
     if (!roomId || !gameState) {
@@ -47,7 +47,7 @@ function App() {
     }
 
     const opponentColor = myColor === 'white' ? 'black' : 'white';
-    
+
     const myInventory = gameState.inventories?.[myColor] || Array(7).fill(false);
     const opInventory = gameState.inventories?.[opponentColor] || Array(7).fill(false);
 
@@ -65,7 +65,7 @@ function App() {
         } else {
             mainMessage = "You Lose!";
         }
-        
+
         if (gameState.restartRequests?.[myColor]) {
             subMessage = "Waiting for opponent to restart...";
         } else if (gameState.restartRequests?.[opponentColor]) {
@@ -82,51 +82,55 @@ function App() {
     }
 
     return (
-        <div className="flex flex-col md:flex-row w-full h-full bg-[#302e2b] text-white">
-            <div className="w-full md:w-64 bg-[#262522] p-4 flex flex-col items-center md:items-start shadow-xl z-10 shrink-0">
-                <div className="text-xl font-bold mb-1">Room: <span className="font-mono text-[#81b64c] tracking-wider">{roomId}</span></div>
-                <button 
+        <div className="flex flex-col md:flex-row w-full h-full bg-[#302e2b] text-white overflow-hidden">
+            <div className="w-full md:w-64 bg-[#262522] p-2 md:p-4 flex flex-row md:flex-col items-center md:items-start justify-between md:justify-start shadow-xl z-10 shrink-0">
+                <div className="text-lg md:text-xl font-bold mb-0 md:mb-1">Room: <span className="font-mono text-[#81b64c] tracking-wider">{roomId}</span></div>
+                <button
                     onClick={leaveRoom}
-                    className="mt-2 text-sm text-red-400 hover:text-red-300 underline"
+                    className="md:mt-2 text-sm text-red-400 hover:text-red-300 underline"
                 >
                     Leave Room
                 </button>
             </div>
 
-            <div className="flex-grow flex flex-col items-center justify-between p-4 overflow-y-auto">
-                <PlayerStrip 
+            <div className="flex-grow flex flex-col items-center justify-between p-2 overflow-hidden">
+                <PlayerStrip
                     isMe={false}
                     player={gameState.players[opponentColor]}
                     color={opponentColor}
                     inventory={opInventory}
                 />
 
-                <div className="flex flex-col items-center w-full max-w-lg my-4 flex-grow justify-center">
-                    <div className="text-center mb-4 min-h-[80px]">
-                        <div className="text-2xl md:text-3xl font-bold bg-white/90 text-black px-4 py-2 rounded shadow-lg inline-block">
+                <div className="flex flex-col items-center w-full max-w-[60vh] lg:max-w-md my-1 md:my-2 flex-grow justify-center min-h-0">
+                    <div className="text-center mb-1 md:mb-2 min-h-[50px] md:min-h-[60px] flex flex-col justify-end shrink-0">
+                        <div className="text-xl md:text-2xl font-bold bg-white/90 text-black px-3 py-1 rounded shadow-lg inline-block">
                             {mainMessage}
                         </div>
-                        <div className="text-gray-400 mt-2 font-semibold h-6">{subMessage}</div>
+                        <div className="text-gray-400 mt-1 font-semibold text-xs md:text-sm h-4 md:h-5">{subMessage}</div>
                     </div>
 
-                    <Board 
-                        board={gameState.board || Array(9).fill(false)}
-                        winningCombo={gameState.winningCombo}
-                        onCellClick={handleCellClick}
-                    />
+                    <div className="w-full shrink-0 flex justify-center items-center">
+                        <Board
+                            board={gameState.board || Array(9).fill(false)}
+                            winningCombo={gameState.winningCombo}
+                            onCellClick={handleCellClick}
+                        />
+                    </div>
 
-                    {status === 'finished' && (
-                        <button 
-                            onClick={requestRestart}
-                            disabled={gameState.restartRequests?.[myColor]}
-                            className="mt-6 px-6 py-3 bg-red-500 hover:bg-red-600 disabled:bg-red-800 disabled:text-gray-400 text-white rounded-lg font-bold text-lg shadow-lg transition-colors"
-                        >
-                            {gameState.restartRequests?.[myColor] ? 'Waiting...' : 'Play Again'}
-                        </button>
-                    )}
+                    <div className="h-10 md:h-12 shrink-0 flex items-center justify-center mt-2">
+                        {status === 'finished' && (
+                            <button
+                                onClick={requestRestart}
+                                disabled={gameState.restartRequests?.[myColor]}
+                                className="px-4 py-2 md:px-6 bg-red-500 hover:bg-red-600 disabled:bg-red-800 disabled:text-gray-400 text-white rounded-lg font-bold text-base md:text-lg shadow-lg transition-colors"
+                            >
+                                {gameState.restartRequests?.[myColor] ? 'Waiting...' : 'Play Again'}
+                            </button>
+                        )}
+                    </div>
                 </div>
 
-                <PlayerStrip 
+                <PlayerStrip
                     isMe={true}
                     player={gameState.players[myColor]}
                     color={myColor}
