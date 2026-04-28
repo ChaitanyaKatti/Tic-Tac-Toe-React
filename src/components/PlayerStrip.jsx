@@ -12,9 +12,6 @@ export function PlayerStrip({ isMe, player, color, inventory, selectedDollSize, 
                 <Icon size={24} className="md:w-8 md:h-8" />
                 <div className="flex flex-col leading-tight">
                     <span className="text-base md:text-lg font-bold text-white">{name}</span>
-                    <span className="text-[10px] md:text-xs text-gray-300 font-mono">
-                        {color ? `Playing as ${color}` : ''}
-                    </span>
                 </div>
             </div>
             <DollDeck 
