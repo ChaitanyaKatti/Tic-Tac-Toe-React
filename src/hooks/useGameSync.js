@@ -5,9 +5,15 @@ import { checkWinner, canPlayerMove } from '../lib/gameLogic';
 
 export function useGameSync() {
     const [roomId, setRoomId] = useState(null);
-    const [myColor, setMyColor] = useState(null);
     const [gameState, setGameState] = useState(null);
     const [error, setError] = useState(null);
+    const [mySessionId] = useState(() => Math.random().toString(36).substring(2, 10));
+
+    let myColor = null;
+    if (gameState && gameState.players) {
+        if (gameState.players.white?.session === mySessionId) myColor = 'white';
+        else if (gameState.players.black?.session === mySessionId) myColor = 'black';
+    }
 
     const getInitialGameState = () => ({
         // Initialize board with false instead of null to prevent Firebase from removing empty arrays
@@ -21,8 +27,7 @@ export function useGameSync() {
         winner: false,
         winningCombo: false,
         players: { white: false, black: false },
-        restartRequests: { white: false, black: false },
-        startingColor: 'white'
+        restartRequests: { white: false, black: false }
     });
 
     const generateRoomCode = () => {
@@ -38,13 +43,12 @@ export function useGameSync() {
         const code = generateRoomCode();
         const initial = getInitialGameState();
         
-        initial.players.white = { name: playerName };
+        initial.players.white = { name: playerName, session: mySessionId };
         
         const roomRef = ref(database, `rooms/${code}`);
         await set(roomRef, initial);
         
         setRoomId(code);
-        setMyColor('white');
         setError(null);
         return code;
     };
@@ -64,12 +68,11 @@ export function useGameSync() {
         }
         
         await update(roomRef, {
-            'players/black': { name: playerName },
+            'players/black': { name: playerName, session: mySessionId },
             'status': 'active'
         });
         
         setRoomId(roomCode);
-        setMyColor('black');
         setError(null);
     };
 
@@ -153,7 +156,7 @@ export function useGameSync() {
     };
 
     const requestRestart = async () => {
-        if (!gameState || !roomId) return;
+        if (!gameState || !roomId || !myColor) return;
         
         const updates = {};
         updates[`restartRequests/${myColor}`] = true;
@@ -162,16 +165,13 @@ export function useGameSync() {
         await update(roomRef, updates);
         
         const otherColor = myColor === 'white' ? 'black' : 'white';
-        // If the other player has already requested restart OR we are in local dev and testing (but we should just check the state)
-        // Note: The listener will fire when our update goes through, but the other player might also fire. 
-        // Only the player who triggers the SECOND true should reset the game.
         if (gameState.restartRequests && gameState.restartRequests[otherColor] === true) {
-            const nextStartingColor = gameState.startingColor === 'white' ? 'black' : 'white';
             const initial = getInitialGameState();
             
-            initial.players = gameState.players;
-            initial.startingColor = nextStartingColor;
-            initial.turnColor = nextStartingColor;
+            initial.players = {
+                white: gameState.players.black,
+                black: gameState.players.white
+            };
             initial.status = 'active';
             
             await set(roomRef, initial);
@@ -180,7 +180,6 @@ export function useGameSync() {
 
     const leaveRoom = () => {
         setRoomId(null);
-        setMyColor(null);
         setGameState(null);
     };
 
