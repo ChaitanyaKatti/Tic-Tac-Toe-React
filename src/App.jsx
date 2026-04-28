@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useGameSync } from './hooks/useGameSync';
 import { Lobby } from './components/Lobby';
 import { Board } from './components/Board';
 import { PlayerStrip } from './components/PlayerStrip';
+import { playSound, clickSound, moveSound, captureSound, gameStartSound, gameEndSound, illegalSound } from './lib/sounds';
 
 function App() {
     const {
@@ -20,6 +21,16 @@ function App() {
     const [selectedDollSize, setSelectedDollSize] = useState(null);
 
     const status = gameState?.status || 'waiting';
+    const prevStatusRef = useRef(status);
+
+    useEffect(() => {
+        if (prevStatusRef.current === 'waiting' && status === 'active') {
+            playSound(gameStartSound);
+        } else if (prevStatusRef.current === 'active' && status === 'finished') {
+            playSound(gameEndSound);
+        }
+        prevStatusRef.current = status;
+    }, [status]);
 
     const handleSelectDoll = (size) => {
         if (selectedDollSize === size) {
@@ -33,6 +44,18 @@ function App() {
         if (!selectedDollSize) return;
         if (status !== 'active') return;
         if (gameState.turnColor !== myColor) return;
+
+        const cell = gameState.board[index];
+        if (cell && cell !== false) {
+            if (selectedDollSize <= cell.size) {
+                playSound(illegalSound);
+                return;
+            } else {
+                playSound(captureSound);
+            }
+        } else {
+            playSound(moveSound);
+        }
 
         makeMove(index, selectedDollSize);
         setSelectedDollSize(null);
@@ -86,7 +109,7 @@ function App() {
             <div className="w-full md:w-64 bg-[#262522] p-2 md:p-4 flex flex-row md:flex-col items-center md:items-start justify-between md:justify-start shadow-xl z-10 shrink-0">
                 <div className="text-lg md:text-xl font-bold mb-0 md:mb-1">Room: <span className="font-mono text-[#81b64c] tracking-wider">{roomId}</span></div>
                 <button
-                    onClick={leaveRoom}
+                    onClick={() => { playSound(clickSound); leaveRoom(); }}
                     className="md:mt-2 text-sm text-red-400 hover:text-red-300 underline"
                 >
                     Leave Room
@@ -109,7 +132,10 @@ function App() {
                         <div className="text-gray-400 font-semibold text-xs md:text-sm">{subMessage}</div>
                     </div>
 
-                    <div className="flex-grow w-full flex justify-center items-center min-h-0 overflow-hidden">
+                    <div 
+                        className="flex-grow w-full flex justify-center items-center min-h-0 overflow-hidden" 
+                        style={{ containerType: 'size' }}
+                    >
                         <Board
                             board={gameState.board || Array(9).fill(false)}
                             winningCombo={gameState.winningCombo}
@@ -120,7 +146,7 @@ function App() {
                     <div className="h-10 md:h-12 shrink-0 flex items-center justify-center mt-2">
                         {status === 'finished' && (
                             <button
-                                onClick={requestRestart}
+                                onClick={() => { playSound(clickSound); requestRestart(); }}
                                 disabled={gameState.restartRequests?.[myColor]}
                                 className="px-4 py-2 md:px-6 bg-red-500 hover:bg-red-600 disabled:bg-red-800 disabled:text-gray-400 text-white rounded-lg font-bold text-base md:text-lg shadow-lg transition-colors"
                             >

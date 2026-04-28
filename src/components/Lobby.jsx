@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { playSound, clickSound } from '../lib/sounds';
 
 export function Lobby({ onCreateRoom, onJoinRoom }) {
     const [name, setName] = useState(localStorage.getItem('myName') || '');
@@ -7,6 +8,7 @@ export function Lobby({ onCreateRoom, onJoinRoom }) {
     const [isJoining, setIsJoining] = useState(false);
 
     const handleCreate = async () => {
+        playSound(clickSound);
         if (!name.trim()) return setError("Please enter your name");
         localStorage.setItem('myName', name.trim());
         try {
@@ -17,6 +19,7 @@ export function Lobby({ onCreateRoom, onJoinRoom }) {
     };
 
     const handleJoin = async () => {
+        playSound(clickSound);
         if (!name.trim()) return setError("Please enter your name");
         if (roomCode.length !== 5) return setError("Room code must be 5 letters");
         localStorage.setItem('myName', name.trim());
