@@ -35,7 +35,7 @@ export function Lobby({ onCreateRoom, onJoinRoom }) {
     return (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
             <div className="bg-[#302e2b] p-8 rounded-2xl shadow-2xl border border-white/10 w-full max-w-sm flex flex-col items-center">
-                <h1 className="text-3xl font-bold text-white mb-6 text-center">Tic Tac Toe v2</h1>
+                <h1 className="text-3xl font-bold text-white mb-6 text-center">Gobblet Gobblers</h1>
                 
                 <input 
                     type="text" 
