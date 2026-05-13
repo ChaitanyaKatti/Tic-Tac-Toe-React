@@ -1,7 +1,7 @@
 import React from 'react';
 import { Cell } from './Cell';
 
-export function Board({ board, winningCombo, onCellClick }) {
+export function Board({ board, winningCombo }) {
     // Note: board can contain `false` from Firebase, so we map it out
     return (
         <div 
@@ -18,7 +18,6 @@ export function Board({ board, winningCombo, onCellClick }) {
                         index={index} 
                         cell={cell} 
                         isWinningCell={isWinningCell}
-                        onClick={onCellClick}
                     />
                 );
             })}

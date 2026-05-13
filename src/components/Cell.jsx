@@ -1,21 +1,29 @@
 import React from 'react';
+import { useDroppable } from '@dnd-kit/core';
 
-export function Cell({ index, cell, isWinningCell, onClick }) {
+export function Cell({ index, cell, isWinningCell }) {
+    const { isOver, setNodeRef } = useDroppable({
+        id: `cell-${index}`,
+        data: { index, cell }
+    });
+
     // Basic checkered pattern colors
     const bgColor = index % 2 === 0 ? 'bg-[#aec993]' : 'bg-[#ebecd0]';
     
     // Scale the image height based on the size (1-7)
     // Map size 1 to ~30%, size 7 to ~90%
     const heightPercentage = cell ? Math.max(30, (cell.size / 7) * 90) : 0;
+    
+    const overStyle = isOver ? 'brightness-110 shadow-[inset_0_0_20px_rgba(255,255,255,0.5)] scale-[1.02]' : '';
 
     return (
         <div 
-            onClick={() => onClick(index)}
+            ref={setNodeRef}
             className={`
-                w-full h-full rounded-xl shadow-md cursor-pointer
+                w-full h-full rounded-xl shadow-md
                 flex items-center justify-center relative transition-transform duration-150
-                hover:scale-105
                 ${bgColor}
+                ${overStyle}
                 ${isWinningCell ? 'scale-105 z-10 shadow-[0_0_15px_rgba(255,215,0,0.8)]' : ''}
             `}
         >

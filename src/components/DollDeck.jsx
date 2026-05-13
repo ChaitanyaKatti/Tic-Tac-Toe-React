@@ -1,38 +1,20 @@
 import React from 'react';
+import { DraggableDoll } from './DraggableDoll';
 
-export function DollDeck({ color, inventory, isMe, selectedDollSize, onSelectDoll }) {
+export function DollDeck({ color, inventory, isMe }) {
     return (
         <div className="flex flex-col items-center bg-black/20 p-1 md:p-2 rounded-lg w-full">
             <div className="flex flex-row items-end justify-center h-14 md:h-20 w-full space-x-1 md:space-x-2">
                 {inventory.map((isAvail, idx) => {
                     const size = idx + 1;
-                    const available = isAvail !== false; // handle false from Firebase
-                    const heightPercentage = Math.max(30, (size / 7) * 100);
-                    const isSelected = selectedDollSize === size;
-
                     return (
-                        <div 
+                        <DraggableDoll 
                             key={size}
-                            className={`
-                                relative flex flex-col items-center justify-end w-7 md:w-10 h-full
-                                transition-all duration-200
-                                ${available && isMe ? 'cursor-pointer hover:-translate-y-1' : ''}
-                                ${isSelected ? '-translate-y-2 scale-110 brightness-125' : ''}
-                                ${!available ? 'opacity-30 grayscale pointer-events-none' : ''}
-                            `}
-                            onClick={() => {
-                                if (isMe && available && onSelectDoll) {
-                                    onSelectDoll(size);
-                                }
-                            }}
-                        >
-                            <img 
-                                src={`/assets/${color}.png`} 
-                                alt={`${color} doll size ${size}`}
-                                className="w-auto drop-shadow-md"
-                                style={{ height: `${heightPercentage}%` }}
-                            />
-                        </div>
+                            size={size}
+                            color={color}
+                            isAvail={isAvail}
+                            isMe={isMe}
+                        />
                     );
                 })}
             </div>

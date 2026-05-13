@@ -2,7 +2,7 @@ import React from 'react';
 import { User, Target } from 'lucide-react';
 import { DollDeck } from './DollDeck';
 
-export function PlayerStrip({ isMe, player, color, inventory, selectedDollSize, onSelectDoll }) {
+export function PlayerStrip({ isMe, player, color, inventory }) {
     const Icon = isMe ? User : Target;
     const name = player ? player.name : (isMe ? 'You' : 'Waiting...');
 
@@ -18,8 +18,6 @@ export function PlayerStrip({ isMe, player, color, inventory, selectedDollSize, 
                 color={color || (isMe ? 'white' : 'black')} 
                 inventory={inventory || Array(7).fill(false)} 
                 isMe={isMe} 
-                selectedDollSize={selectedDollSize}
-                onSelectDoll={onSelectDoll}
             />
         </div>
     );
