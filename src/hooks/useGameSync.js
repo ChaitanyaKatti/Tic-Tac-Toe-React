@@ -83,7 +83,6 @@ export function useGameSync() {
         const unsubscribe = onValue(roomRef, (snapshot) => {
             if (snapshot.exists()) {
                 const data = snapshot.val();
-                // Ensure arrays have correct length if firebase truncated them
                 if (!data.board) data.board = Array(9).fill(false);
                 else while(data.board.length < 9) data.board.push(false);
 
@@ -102,14 +101,23 @@ export function useGameSync() {
         return () => unsubscribe();
     }, [roomId]);
 
-    const makeMove = async (index, size) => {
+    const makeMove = async (targetIndex, size, sourceIndex = null) => {
         if (!gameState || gameState.status !== 'active' || gameState.turnColor !== myColor) return;
-        if (!gameState.inventories[myColor][size - 1]) return; // don't have this doll
         
-        // Convert 'false' back to null for game logic processing
-        const currentBoard = gameState.board.map(c => c === false ? null : c);
-        const cell = currentBoard[index];
-        if (cell && cell.size >= size) return; // invalid gobble
+        if (sourceIndex === null) {
+            if (!gameState.inventories[myColor][size - 1]) return;
+        } else {
+            const sourceStack = gameState.board[sourceIndex];
+            if (!sourceStack || sourceStack === false || sourceStack.length === 0) return;
+            const topPiece = sourceStack[sourceStack.length - 1];
+            if (topPiece.color !== myColor || topPiece.size !== size) return;
+        }
+        
+        const currentBoard = gameState.board.map(c => c === false ? [] : c);
+        const targetStack = currentBoard[targetIndex];
+        const targetTopSize = targetStack.length > 0 ? targetStack[targetStack.length - 1].size : 0;
+        
+        if (size <= targetTopSize) return;
 
         const newBoard = [...currentBoard];
         const newInventories = {
@@ -117,21 +125,39 @@ export function useGameSync() {
             black: [...gameState.inventories.black]
         };
 
-        newBoard[index] = { color: myColor, size };
-        newInventories[myColor][size - 1] = false;
+        if (sourceIndex === null) {
+            newInventories[myColor][size - 1] = false;
+        } else {
+            const updatedSourceStack = [...newBoard[sourceIndex]];
+            updatedSourceStack.pop();
+            newBoard[sourceIndex] = updatedSourceStack;
+        }
 
-        const winningCombo = checkWinner(newBoard, myColor);
+        const updatedTargetStack = [...newBoard[targetIndex], { color: myColor, size }];
+        newBoard[targetIndex] = updatedTargetStack;
+
+        const wins = checkWinner(newBoard);
         let nextTurnColor = myColor === 'white' ? 'black' : 'white';
         let newStatus = 'active';
         let winner = false;
+        let winningCombo = false;
 
-        if (winningCombo) {
+        if (wins.white && wins.black) {
             newStatus = 'finished';
-            winner = myColor;
+            winner = 'draw';
+            winningCombo = wins.white.concat(wins.black);
+        } else if (wins.white) {
+            newStatus = 'finished';
+            winner = 'white';
+            winningCombo = wins.white;
+        } else if (wins.black) {
+            newStatus = 'finished';
+            winner = 'black';
+            winningCombo = wins.black;
         } else {
-            const nextCanMove = canPlayerMove(newBoard, newInventories[nextTurnColor]);
+            const nextCanMove = canPlayerMove(newBoard, newInventories[nextTurnColor], nextTurnColor);
             if (!nextCanMove) {
-                const currentCanMove = canPlayerMove(newBoard, newInventories[myColor]);
+                const currentCanMove = canPlayerMove(newBoard, newInventories[myColor], myColor);
                 if (!currentCanMove) {
                     newStatus = 'finished';
                     winner = 'draw';
@@ -141,8 +167,7 @@ export function useGameSync() {
             }
         }
 
-        // Convert nulls back to false for Firebase
-        const fbBoard = newBoard.map(c => c === null ? false : c);
+        const fbBoard = newBoard.map(stack => stack.length === 0 ? false : stack);
 
         const roomRef = ref(database, `rooms/${roomId}`);
         await update(roomRef, {

@@ -59,22 +59,24 @@ function App() {
         }
 
         const size = active.data.current.size;
-        const index = over.data.current.index;
+        const sourceIndex = active.data.current.sourceIndex ?? null;
+        const targetIndex = over.data.current.index;
         
-        const cell = gameState.board[index];
-        if (cell && cell !== false) {
-            if (size <= cell.size) {
-                // Illegal move: smaller or equal size over existing
-                playSound(illegalSound);
-                return;
-            } else {
-                playSound(captureSound);
-            }
+        const currentBoard = gameState.board.map(c => c === false ? [] : c);
+        const targetStack = currentBoard[targetIndex];
+        const targetTopSize = targetStack.length > 0 ? targetStack[targetStack.length - 1].size : 0;
+        
+        if (size <= targetTopSize) {
+            // Illegal move: smaller or equal size over existing
+            playSound(illegalSound);
+            return;
+        } else if (targetTopSize > 0) {
+            playSound(captureSound);
         } else {
             playSound(moveSound);
         }
 
-        makeMove(index, size);
+        makeMove(targetIndex, size, sourceIndex);
     };
 
     if (!roomId || !gameState) {
@@ -160,6 +162,8 @@ function App() {
                             <Board
                                 board={gameState.board || Array(9).fill(false)}
                                 winningCombo={gameState.winningCombo}
+                                myColor={myColor}
+                                turnColor={gameState.turnColor}
                             />
                         </div>
 
@@ -186,16 +190,26 @@ function App() {
             </div>
 
             <DragOverlay dropAnimation={{ duration: 250, easing: 'cubic-bezier(0.18, 0.67, 0.6, 1.22)' }}>
-                {activeDragData ? (
-                    <div className="flex flex-col items-center justify-end w-7 md:w-10 h-14 md:h-20 drop-shadow-2xl">
-                        <img 
-                            src={`/assets/${activeDragData.color}.png`} 
-                            alt="dragged piece"
-                            className="w-auto select-none pointer-events-none scale-110"
-                            style={{ height: `${Math.max(30, (activeDragData.size / 7) * 100)}%` }}
-                        />
-                    </div>
-                ) : null}
+                {activeDragData ? (() => {
+                    const inCell = activeDragData.sourceIndex !== null && activeDragData.sourceIndex !== undefined;
+                    const heightPercentage = inCell ? Math.max(30, (activeDragData.size / 7) * 90) : Math.max(30, (activeDragData.size / 7) * 100);
+                    
+                    return (
+                        <div className={`flex flex-col items-center drop-shadow-2xl ${inCell ? 'justify-center w-[25vw] h-[25vw] max-w-[120px] max-h-[120px]' : 'justify-end w-7 md:w-10 h-14 md:h-20'}`}>
+                            <img 
+                                src={`/assets/${activeDragData.color}.png`} 
+                                alt="dragged piece"
+                                className={`w-auto select-none pointer-events-none ${inCell ? 'scale-[1.2]' : 'scale-110'}`}
+                                style={{ height: `${heightPercentage}%` }}
+                            />
+                            {inCell && (
+                                <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white font-bold text-3xl md:text-5xl opacity-90 pointer-events-none" style={{ textShadow: '0 0 4px #000, 0 0 2px #000' }}>
+                                    {activeDragData.size}
+                                </span>
+                            )}
+                        </div>
+                    );
+                })() : null}
             </DragOverlay>
         </DndContext>
     );

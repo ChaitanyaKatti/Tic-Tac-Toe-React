@@ -9,17 +9,27 @@ const WINS = [
 ];
 
 /**
- * Checks if a specific color has a winning combination.
- * The board is an array of 9 objects: { color, size } or null.
+ * Checks for winning combinations for both players simultaneously.
+ * The board is an array of 9 stacks (arrays) or false.
  * A cell belongs to a color if the top-most doll matches that color.
  */
-export function checkWinner(board, color) {
+export function checkWinner(board) {
+    const wins = { white: null, black: null };
     for (let combo of WINS) {
-        if (combo.every(idx => board[idx] && board[idx].color === color)) {
-            return combo;
+        // Get the top piece of each cell in the combo
+        const cells = combo.map(idx => {
+            const stack = board[idx];
+            return (stack && stack.length > 0) ? stack[stack.length - 1] : null;
+        });
+        
+        if (!wins.white && cells.every(c => c && c.color === 'white')) {
+            wins.white = combo;
+        }
+        if (!wins.black && cells.every(c => c && c.color === 'black')) {
+            wins.black = combo;
         }
     }
-    return null;
+    return wins;
 }
 
 /**
@@ -35,32 +45,41 @@ export function getAvailableSizes(inventory) {
 
 /**
  * Determines if a player has any valid moves left.
- * If not, their turn should be skipped.
+ * A move is valid if they can place a piece from inventory,
+ * OR move one of their existing top pieces to a valid square.
  * 
- * @param {Array} board - The 9-cell board array
- * @param {Array} inventory - The boolean array of length 7 representing the player's available dolls
- * @returns {boolean} - true if the player CAN move, false if they MUST skip
+ * @param {Array} board - The 9-cell board array of stacks
+ * @param {Array} inventory - The boolean array of length 7 representing available dolls
+ * @param {string} color - The color of the player to check
+ * @returns {boolean} - true if the player CAN move
  */
-export function canPlayerMove(board, inventory) {
+export function canPlayerMove(board, inventory, color) {
     const availableSizes = getAvailableSizes(inventory);
+    const largestInv = availableSizes.length > 0 ? availableSizes[availableSizes.length - 1] : 0;
     
-    // If no dolls left, cannot move
-    if (availableSizes.length === 0) {
-        return false;
+    // Find all pieces the player can pick up from the board
+    let movableBoardPieces = [];
+    for (let i = 0; i < 9; i++) {
+        const stack = board[i];
+        if (stack && stack.length > 0) {
+            const top = stack[stack.length - 1];
+            if (top.color === color) {
+                movableBoardPieces.push({ size: top.size, index: i });
+            }
+        }
     }
 
-    const largestAvailable = availableSizes[availableSizes.length - 1];
-
-    // Check if the largest available doll can be placed on ANY cell
+    // Check if there is ANY cell we can drop a piece on
     for (let i = 0; i < 9; i++) {
-        const cell = board[i];
-        // If cell is empty, we can definitely move
-        if (!cell) {
-            return true;
-        }
-        // If cell is occupied, we can gobble if our largest is strictly larger
-        if (largestAvailable > cell.size) {
-            return true;
+        const stack = board[i];
+        const topSize = (stack && stack.length > 0) ? stack[stack.length - 1].size : 0;
+        
+        // Can we place our largest inventory piece here?
+        if (largestInv > topSize) return true;
+        
+        // Can we place any of our board pieces here?
+        for (let bp of movableBoardPieces) {
+            if (bp.index !== i && bp.size > topSize) return true;
         }
     }
 
